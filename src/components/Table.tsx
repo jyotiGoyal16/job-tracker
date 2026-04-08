@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react'
-import Card from './Card'
+import type { ReactNode } from "react";
+import Card from "./Card";
 
 interface TableProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 function Table({ children }: TableProps) {
@@ -10,7 +10,7 @@ function Table({ children }: TableProps) {
     <Card className="overflow-hidden p-0">
       <div className="overflow-x-auto">{children}</div>
     </Card>
-  )
+  );
 }
 
-export default Table
+export default Table;
