@@ -1,5 +1,5 @@
 interface DropdownProps {
-  options: string[]
+  options: string[];
 }
 
 function Dropdown({ options }: DropdownProps) {
@@ -11,7 +11,7 @@ function Dropdown({ options }: DropdownProps) {
         </option>
       ))}
     </select>
-  )
+  );
 }
 
-export default Dropdown
+export default Dropdown;
