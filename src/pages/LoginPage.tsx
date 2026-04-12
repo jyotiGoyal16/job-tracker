@@ -48,11 +48,6 @@ function LoginPage({ onGoogleLogin }: LoginPageProps) {
           </svg>
           Continue with Google
         </button>
-
-        <p className="text-xs text-slate-500">
-          OAuth is mocked for now. This button directly signs in for UI flow
-          testing.
-        </p>
       </section>
     </main>
   );
