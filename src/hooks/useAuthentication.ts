@@ -5,21 +5,26 @@ function useAuthentication() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+    fetch(`${import.meta.env.VITE_API_URL}/auth/health`, {
       credentials: "include",
     })
-      .then((res) => {
-        if (res.ok) {
+      .then(async (res) => {
+        const data = await res.json();
+        if (data.user.email !== null) {
           setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
         }
       })
+      .catch((err) => console.log("Server not reachable or user is logged out"))
       .finally(() => {
         setIsLoading(false);
       });
   }, []);
 
   const loginWithGoogle = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+    const BASE_URL = import.meta.env.VITE_API_URL;
+    window.location.href = `${BASE_URL}/auth/google`;
   };
 
   const logout = () => {

@@ -1,6 +1,7 @@
 import DashboardPage from "./pages/DashboardPage";
 import useAuthentication from "./hooks/useAuthentication";
 import LoginPage from "./pages/LoginPage";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 function App() {
   const { isLoggedIn, isLoading, loginWithGoogle, logout } =
@@ -10,11 +11,38 @@ function App() {
     return <div>Loading...</div>;
   }
 
-  if (!isLoggedIn) {
-    return <LoginPage onGoogleLogin={loginWithGoogle} />;
-  }
-
-  return <DashboardPage onLogout={logout} />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            !isLoggedIn ? (
+              <LoginPage onGoogleLogin={loginWithGoogle} />
+            ) : (
+              <Navigate to="/dashboard" />
+            )
+          }
+        ></Route>
+        <Route
+          path="/dashboard"
+          element={
+            isLoggedIn ? (
+              <DashboardPage onLogout={logout} />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        ></Route>
+        <Route
+          path="*"
+          element={
+            isLoggedIn ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
+          }
+        ></Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
