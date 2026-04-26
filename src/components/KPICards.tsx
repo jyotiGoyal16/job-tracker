@@ -1,16 +1,24 @@
+import { getKPIs } from "../utils/kpisHelper";
 import Card from "./Card";
 
-const kpis = [
-  { label: "Total Applications", value: "124", accent: "text-slate-800" },
-  { label: "Interviews Scheduled", value: "18", accent: "text-amber-600" },
-  { label: "Rejections", value: "37", accent: "text-red-600" },
-  { label: "Offers", value: "4", accent: "text-emerald-600" },
-  { label: "Response Rate", value: "44%", accent: "text-blue-600" },
-];
+interface KPICardsProps {
+  applicationCount: number;
+  interviewsCount: number;
+  rejectionsCount: number;
+  offersCount: number;
+}
 
-function KPICards() {
+function KPICards(props: KPICardsProps) {
+  const { applicationCount, interviewsCount, rejectionsCount, offersCount } =
+    props;
+  const kpis = getKPIs(
+    applicationCount,
+    interviewsCount,
+    rejectionsCount,
+    offersCount,
+  );
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {kpis.map((kpi) => (
         <Card key={kpi.label} className="p-5">
           <p className="text-sm font-medium text-slate-500">{kpi.label}</p>

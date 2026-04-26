@@ -1,13 +1,13 @@
-export type ApplicationStatus = "Applied" | "Interview" | "Rejected" | "Offer";
+export type ApplicationStatus = "applied" | "interview" | "rejected" | "offer";
 
-export type Platform = "LinkedIn" | "Naukri" | "Instahyre" | "Career Page";
+export type Platform = "Linkedin" | "Indeed" | "Instahyre" | "Career Page";
 
 export interface JobApplication {
   id: string;
-  companyName: string;
+  company: string;
   role: string;
   platform: Platform;
   location: string;
-  dateApplied: string;
+  date: string;
   status: ApplicationStatus;
 }

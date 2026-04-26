@@ -4,7 +4,7 @@ import {
   googleLogin,
   healthCheck,
   logout,
-} from "../controller/authController";
+} from "../controllers/authController";
 
 const router = Router();
 

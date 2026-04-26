@@ -12,11 +12,16 @@ function useAuthentication() {
         const data = await res.json();
         if (data.user.email !== null) {
           setIsLoggedIn(true);
+          localStorage.setItem("userInfo", JSON.stringify(data.user));
         } else {
           setIsLoggedIn(false);
+          localStorage.removeItem("userInfo");
         }
       })
-      .catch((err) => console.log("Server not reachable or user is logged out"))
+      .catch(() => {
+        localStorage.removeItem("userInfo");
+        console.log("Server not reachable or user is logged out");
+      })
       .finally(() => {
         setIsLoading(false);
       });
@@ -33,6 +38,7 @@ function useAuthentication() {
       credentials: "include",
     }).then(() => {
       setIsLoggedIn(false);
+      localStorage.removeItem("userInfo");
     });
   };
 
