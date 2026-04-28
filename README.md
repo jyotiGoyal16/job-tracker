@@ -5,7 +5,7 @@ Job Tracker is a full-stack TypeScript application that syncs job-related emails
 ## What It Does
 
 - Google OAuth2 login and session-based authentication
-- Gmail sync for job emails (LinkedIn + Indeed filters), with support for more platforms coming soon
+- Gmail sync for job emails (LinkedIn, Indeed, Greenhouse and Workday), with support for more platforms coming soon
 - Rule-based parsing for company, role, location, platform, and status
 - Bulk upsert into `applications` with dedupe via unique conflict keys
 - Dashboard with date-range sync, applications table, KPIs, filters, and loading states
