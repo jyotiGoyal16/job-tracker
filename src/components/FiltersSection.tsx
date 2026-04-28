@@ -27,9 +27,10 @@ function FiltersSection() {
           options={[
             "All Platforms",
             "LinkedIn",
-            "Naukri",
-            "Instahyre",
-            "Career Page",
+            "Indeed",
+            "Greenhouse",
+            "Workday",
+            "Other",
           ]}
         />
         <Dropdown

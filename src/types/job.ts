@@ -1,6 +1,11 @@
 export type ApplicationStatus = "applied" | "interview" | "rejected" | "offer";
 
-export type Platform = "Linkedin" | "Indeed" | "Instahyre" | "Career Page";
+export type Platform =
+  | "Linkedin"
+  | "Indeed"
+  | "Greenhouse"
+  | "Workday"
+  | "Other";
 
 export interface JobApplication {
   id: string;

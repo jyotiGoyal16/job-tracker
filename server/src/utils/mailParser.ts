@@ -1,6 +1,28 @@
+import {
+  GREENHOUSE_COMPANY_PATTERNS,
+  GREENHOUSE_ROLE_PATTERNS,
+  WORKDAY_COMPANY_PATTERNS,
+  WORKDAY_ROLE_PATTERNS,
+} from "../constants";
 import { ApplicationStatus } from "../types/ApplicationStatus";
 import { HeaderValues } from "../types/HeaderValues";
 import { decodePayloadBody, toIsoDate } from "./mailUtility";
+
+const extractRole = (text: string, rolePatterns: RegExp[]) => {
+  for (const re of rolePatterns) {
+    const m = re.exec(text);
+    if (m?.[1]) return m[1].trim();
+  }
+  return "";
+};
+
+const extractCompany = (text: string, companyPatterns: RegExp[]) => {
+  for (const pattern of companyPatterns) {
+    const match = pattern.exec(text);
+    if (match?.[1]) return match[1].trim().replace(/[!.,]$/, "");
+  }
+  return "";
+};
 
 const getHeaderValue = (
   headers: HeaderValues[],
@@ -17,6 +39,8 @@ const getPlatform = (from: string) => {
 
   if (from.includes("linkedin")) return "Linkedin";
   if (from.includes("indeed")) return "Indeed";
+  if (from.includes("greenhouse-mail.io")) return "Greenhouse";
+  if (from.includes("@myworkday.com")) return "Workday";
   return "other";
 };
 
@@ -55,9 +79,7 @@ const pickBestBody = (plainText: string, htmlText: string): string => {
   return score(hTrim) > score(pTrim) ? htmlText : plainText;
 };
 
-const extractEmailBody = (payload: any): string => {
-  if (!payload) return "";
-
+const extractEmailBodyJobBoard = (payload: any): string => {
   let textContent = "",
     htmlContent = "";
 
@@ -84,6 +106,50 @@ const extractEmailBody = (payload: any): string => {
   }
 
   return pickBestBody(textContent, htmlContent);
+};
+
+const extractEmailBodyOther = (payload: any): string => {
+  const parts = payload?.parts?.length ? payload.parts : [payload];
+
+  for (const part of parts) {
+    if (part?.body?.data) {
+      const { htmlText, plainText } = decodePayloadBody(
+        part.body.data,
+        part.mimeType,
+      );
+      const picked = pickBestBody(plainText, htmlText);
+      if (picked) return picked;
+    }
+
+    // one-level nested
+    if (part?.parts?.length) {
+      for (const child of part.parts) {
+        if (!child?.body?.data) continue;
+        const { htmlText, plainText } = decodePayloadBody(
+          child.body.data,
+          child.mimeType,
+        );
+        const picked = pickBestBody(plainText, htmlText);
+        if (picked) return picked;
+      }
+    }
+  }
+
+  return "";
+};
+
+const extractEmailBody = (payload: any, from: string): string => {
+  if (!payload) return "";
+
+  const platform = getPlatform(from) || "";
+
+  if (platform === "Linkedin" || platform === "Indeed") {
+    return extractEmailBodyJobBoard(payload);
+  } else if (platform === "Greenhouse" || platform === "Workday") {
+    return extractEmailBodyOther(payload);
+  }
+
+  return "";
 };
 
 const getEmailContent = (
@@ -114,6 +180,19 @@ const getEmailContent = (
     role = content[6] || "";
     company = companyData[0] || "";
     location = companyData[1] || "";
+  } else if (platform === "Indeed") {
+    const companyData = content[4]?.split(" - ") || [];
+    role = content[3] || "";
+    company = companyData[0] || "";
+    location = companyData[1] || "";
+  } else if (platform === "Greenhouse") {
+    role = extractRole(content.join(" "), GREENHOUSE_ROLE_PATTERNS);
+    company = extractCompany(content.join(" "), GREENHOUSE_COMPANY_PATTERNS);
+    location = "Bengaluru, Karnataka, India";
+  } else if (platform === "Workday") {
+    role = extractRole(content.join(" "), WORKDAY_ROLE_PATTERNS);
+    company = extractCompany(content.join(" "), WORKDAY_COMPANY_PATTERNS);
+    location = "Bengaluru, Karnataka, India";
   } else {
     const companyData = content[4]?.split(" - ") || [];
     role = content[3] || "";
@@ -130,16 +209,24 @@ const detectApplicationStatus = (body: string[]): ApplicationStatus => {
     text.includes("unfortunately") ||
     text.includes("we're sorry") ||
     text.includes("moving forward with other") ||
-    text.includes("not be moving forward")
+    text.includes("not be moving forward") ||
+    text.includes("with another candidate")
   ) {
     return "rejected";
   } else if (
     text.includes("application submitted") ||
-    text.includes("application was sent to")
+    text.includes("application was sent to") ||
+    text.includes("for applying to") ||
+    text.includes("for applying for") ||
+    text.includes("received your application") ||
+    text.includes("has been received") ||
+    text.includes("for your interest in") ||
+    text.includes("application is currently under review") ||
+    text.includes("application is under review")
   ) {
     return "applied";
   }
-  return "other";
+  return "applied";
 };
 
 export {

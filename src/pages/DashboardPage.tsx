@@ -30,9 +30,7 @@ function DashboardPage(props: DashboardPageProps) {
     })
       .then((res) => res.json())
       .then((data) => {
-        const jobApplications = data.data.filter(
-          (application: any) => application.status !== "other",
-        );
+        const jobApplications = data.data;
         setApplications(jobApplications);
       });
   };
@@ -59,8 +57,6 @@ function DashboardPage(props: DashboardPageProps) {
     setIsLoading(true);
     syncMails(startDate, endDate);
   };
-
-  console.log(applications);
 
   const applicationCount = applications.length;
   const interviewCount = applications?.filter(

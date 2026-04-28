@@ -13,8 +13,9 @@ const badgeClasses: Record<BadgeVariant, string> = {
   offer: "bg-emerald-100 text-emerald-700",
   Linkedin: "bg-sky-100 text-sky-700",
   Indeed: "bg-indigo-100 text-indigo-700",
-  Instahyre: "bg-violet-100 text-violet-700",
-  "Career Page": "bg-slate-200 text-slate-700",
+  Greenhouse: "bg-green-200 text-green-700",
+  Workday: "bg-amber-100 text-amber-800",
+  Other: "bg-slate-200 text-slate-700",
 };
 
 function Badge({ variant }: BadgeProps) {

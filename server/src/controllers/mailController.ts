@@ -9,7 +9,6 @@ import {
   getEmailContent,
 } from "../utils/mailParser";
 import { HeaderValues } from "../types/HeaderValues";
-import { ApplicationStatus } from "../types/ApplicationStatus";
 import format from "pg-format";
 import { MailDetails } from "../types/MailDetails";
 
@@ -59,10 +58,11 @@ const getMails = async (req: Request, res: Response) => {
     const endDate = req.query.endDate as string;
 
     const searchQuery = `
-    (from:jobs-noreply@linkedin.com OR from:indeedapply@indeed.com)
+    (from:jobs-noreply@linkedin.com OR from:indeedapply@indeed.com OR from:no-reply@us.greenhouse-mail.io OR from:no-reply@eu.greenhouse-mail.io OR from:@myworkday.com)
     after:${startDate}
     before:${endDate}
-    -subject:("job alert" OR "job alerts" OR alerts OR recommendation OR recommendations OR "New jobs similar to" OR "New jobs matching your profile" OR "apply now to")
+    -from:jobalerts-noreply@linkedin.com
+    -subject:("job alert" OR "job alerts" OR alerts OR recommendation OR recommendations OR "New jobs similar to" OR "New jobs matching your profile" OR "apply now to" OR "Your application was viewed" OR "Problem with your")
 `;
 
     const listResponse = await gmail.users.messages.list({
@@ -95,7 +95,7 @@ const getMails = async (req: Request, res: Response) => {
 
       const from = getHeaderValue(headers, "From");
       const headerDate = getHeaderValue(headers, "Date");
-      const body = extractEmailBody(payload);
+      const body = extractEmailBody(payload, from);
       const emailContent = getEmailContent(headerDate, from, body);
       const status = detectApplicationStatus(emailContent?.content);
       const { date, role, company, location, platform } = emailContent;
@@ -111,17 +111,19 @@ const getMails = async (req: Request, res: Response) => {
       });
     }
 
-    const values = mailDetails.map((m) => [
-      userId,
-      m.company,
-      m.role,
-      m.platform,
-      m.location,
-      m.date,
-      m.status,
-      m.id,
-      new Date(),
-    ]);
+    const values = mailDetails
+      .filter((m) => m.role && m.company)
+      .map((m) => [
+        userId,
+        m.company,
+        m.role,
+        m.platform,
+        m.location,
+        m.date,
+        m.status,
+        m.id,
+        new Date(),
+      ]);
 
     await pool.query(
       format(
