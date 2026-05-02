@@ -1,51 +1,51 @@
-import Card from "./Card";
-import Dropdown from "./Dropdown";
-import Input from "./Input";
+import {
+  LOCATION_OPTIONS,
+  PLATFORM_OPTIONS,
+  STATUS_OPTIONS,
+} from "../constants";
+import useTableFilters from "../hooks/useTableFilters";
+import type { UpdateFilters } from "../types/tableFilters";
+import Dropdown from "./shared/Dropdown";
 
-function FiltersSection() {
+const FiltersSection = ({
+  updateFilters,
+}: {
+  updateFilters: UpdateFilters;
+}) => {
+  const {
+    statusFilter,
+    setStatusFilter,
+    platformFilter,
+    setPlatformFilter,
+    locationFilter,
+    setLocationFilter,
+  } = useTableFilters(updateFilters);
+
   return (
-    <Card className="p-5">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-slate-800">Filters</h2>
-        <p className="text-sm text-slate-500">
-          Narrow down applications quickly
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-        <Input placeholder="Search company or role..." />
-        <Dropdown
-          options={[
-            "All Statuses",
-            "Applied",
-            "Interview",
-            "Rejected",
-            "Offer",
-          ]}
-        />
-        <Dropdown
-          options={[
-            "All Platforms",
-            "LinkedIn",
-            "Indeed",
-            "Greenhouse",
-            "Workday",
-            "Other",
-          ]}
-        />
-        <Dropdown
-          options={[
-            "All Locations",
-            "Bengaluru, India",
-            "Remote",
-            "Hyderabad, India",
-            "Pune, India",
-            "Chennai, India",
-          ]}
-        />
-      </div>
-    </Card>
+    <div className="flex items-center justify-end gap-2">
+      <Dropdown
+        id="filter-status"
+        label="Status"
+        options={[...STATUS_OPTIONS]}
+        value={statusFilter}
+        onValueChange={setStatusFilter}
+      />
+      <Dropdown
+        id="filter-platform"
+        label="Platform"
+        options={[...PLATFORM_OPTIONS]}
+        value={platformFilter}
+        onValueChange={setPlatformFilter}
+      />
+      <Dropdown
+        id="filter-location"
+        label="Location"
+        options={[...LOCATION_OPTIONS]}
+        value={locationFilter}
+        onValueChange={setLocationFilter}
+      />
+    </div>
   );
-}
+};
 
 export default FiltersSection;

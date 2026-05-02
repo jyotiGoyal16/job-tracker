@@ -7,7 +7,7 @@ interface LoadingSpinnerProps {
   fullScreen?: boolean;
 }
 
-function LoadingSpinner(props: LoadingSpinnerProps) {
+const LoadingSpinner = (props: LoadingSpinnerProps) => {
   const { size = 20, label, className = "", fullScreen = false } = props;
 
   const content = (
@@ -34,6 +34,6 @@ function LoadingSpinner(props: LoadingSpinnerProps) {
   }
 
   return content;
-}
+};
 
 export default LoadingSpinner;

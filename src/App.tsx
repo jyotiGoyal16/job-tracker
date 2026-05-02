@@ -3,7 +3,7 @@ import useAuthentication from "./hooks/useAuthentication";
 import LoginPage from "./pages/LoginPage";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
-function App() {
+const App = () => {
   const { isLoggedIn, isLoading, loginWithGoogle, logout } =
     useAuthentication();
 
@@ -23,7 +23,7 @@ function App() {
               <Navigate to="/dashboard" />
             )
           }
-        ></Route>
+        />
         <Route
           path="/dashboard"
           element={
@@ -33,16 +33,16 @@ function App() {
               <Navigate to="/login" />
             )
           }
-        ></Route>
+        />
         <Route
           path="*"
           element={
             isLoggedIn ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
           }
-        ></Route>
+        />
       </Routes>
     </BrowserRouter>
   );
-}
+};
 
 export default App;

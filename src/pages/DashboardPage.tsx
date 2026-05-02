@@ -1,27 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import ApplicationsTable from "../components/ApplicationsTable";
-import DashboardHeader from "../components/DashboardHeader";
-import FiltersSection from "../components/FiltersSection";
 import KPICards from "../components/KPICards";
-import { formatDateInput } from "../utils/dateTimeHelper";
+import DashboardSidebar from "../components/DashboardSidebar";
+import useDateFilter from "../hooks/useDateFilter";
 
 interface DashboardPageProps {
   onLogout: () => void;
 }
 
-function DashboardPage(props: DashboardPageProps) {
-  const { onLogout } = props;
+const DashboardPage = ({ onLogout }: DashboardPageProps) => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  const defaultStartDateInput = useMemo(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 2);
-    return formatDateInput(d);
-  }, []);
-  const defaultEndDateInput = useMemo(() => formatDateInput(new Date()), []);
-  const [startDate, setStartDate] = useState(defaultStartDateInput);
-  const [endDate, setEndDate] = useState(defaultEndDateInput);
   const [isLoading, setIsLoading] = useState(true);
   const [applications, setApplications] = useState([]);
+  const [filteredApplications, setFilteredApplications] = useState([]);
+
+  const { startDate, setStartDate, endDate, setEndDate } =
+    useDateFilter(syncMails);
 
   const fetchApplications = () => {
     const params = new URLSearchParams({ startDate, endDate });
@@ -32,10 +26,11 @@ function DashboardPage(props: DashboardPageProps) {
       .then((data) => {
         const jobApplications = data.data;
         setApplications(jobApplications);
+        setFilteredApplications(jobApplications);
       });
   };
 
-  const syncMails = (rangeStartDate: string, rangeEndDate: string) => {
+  function syncMails(rangeStartDate: string, rangeEndDate: string) {
     const params = new URLSearchParams({
       startDate: rangeStartDate,
       endDate: rangeEndDate,
@@ -47,52 +42,49 @@ function DashboardPage(props: DashboardPageProps) {
       .then((res) => res.json())
       .then(() => fetchApplications())
       .finally(() => setIsLoading(false));
-  };
+  }
 
-  useEffect(() => {
-    syncMails(defaultStartDateInput, defaultEndDateInput);
-  }, [defaultStartDateInput, defaultEndDateInput]);
-
-  const onMailSync = () => {
-    setIsLoading(true);
-    syncMails(startDate, endDate);
-  };
-
-  const applicationCount = applications.length;
-  const interviewCount = applications?.filter(
+  const applicationCount = filteredApplications.length;
+  const interviewCount = filteredApplications?.filter(
     (application) => application.status.toLowerCase() === "interview",
   ).length;
-  const rejectionCount = applications?.filter(
+  const rejectionCount = filteredApplications?.filter(
     (application) => application.status.toLowerCase() === "rejected",
   ).length;
-  const offerCount = applications?.filter(
+  const offerCount = filteredApplications?.filter(
     (application) => application.status.toLowerCase() === "offer",
   ).length;
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
-      <DashboardHeader
+    <main className="flex min-h-screen w-full flex-col gap-6 px-4 py-6 md:px-6 md:py-8 lg:flex-row lg:items-stretch">
+      <DashboardSidebar
         username={userInfo.name}
         avatarUrl={userInfo.picture}
         startDate={startDate}
         endDate={endDate}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
-        onMailSync={onMailSync}
         onLogout={onLogout}
-        isSyncing={isLoading}
       />
 
-      <KPICards
-        applicationCount={applicationCount}
-        interviewsCount={interviewCount}
-        rejectionsCount={rejectionCount}
-        offersCount={offerCount}
-      />
-      <FiltersSection />
-      <ApplicationsTable applications={applications} isLoading={isLoading} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6">
+        <div className="shrink-0">
+          <KPICards
+            applicationCount={applicationCount}
+            interviewsCount={interviewCount}
+            rejectionsCount={rejectionCount}
+            offersCount={offerCount}
+          />
+        </div>
+        <ApplicationsTable
+          filteredApplications={filteredApplications}
+          applications={applications}
+          isLoading={isLoading}
+          setFilteredApplications={setFilteredApplications}
+        />
+      </div>
     </main>
   );
-}
+};
 
 export default DashboardPage;

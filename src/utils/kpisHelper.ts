@@ -4,7 +4,7 @@ type KPICard = {
   accent: string;
 };
 
-const getKPIs = (
+const generateKPIMapping = (
   applicationCount: number,
   interviewsCount: number,
   rejectionsCount: number,
@@ -26,4 +26,4 @@ const getKPIs = (
   ];
 };
 
-export { getKPIs };
+export { generateKPIMapping };

@@ -5,7 +5,7 @@ interface CardProps {
   className?: string;
 }
 
-function Card({ children, className = "" }: CardProps) {
+const Card = ({ children, className = "" }: CardProps) => {
   return (
     <div
       className={`rounded-xl border border-slate-200 bg-white p-4 shadow-soft ${className}`}
@@ -13,6 +13,6 @@ function Card({ children, className = "" }: CardProps) {
       {children}
     </div>
   );
-}
+};
 
 export default Card;

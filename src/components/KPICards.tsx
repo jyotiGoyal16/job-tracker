@@ -1,5 +1,5 @@
-import { getKPIs } from "../utils/kpisHelper";
-import Card from "./Card";
+import { generateKPIMapping } from "../utils/kpisHelper";
+import Card from "./shared/Card";
 
 interface KPICardsProps {
   applicationCount: number;
@@ -8,10 +8,13 @@ interface KPICardsProps {
   offersCount: number;
 }
 
-function KPICards(props: KPICardsProps) {
-  const { applicationCount, interviewsCount, rejectionsCount, offersCount } =
-    props;
-  const kpis = getKPIs(
+const KPICards = ({
+  applicationCount,
+  interviewsCount,
+  rejectionsCount,
+  offersCount,
+}: KPICardsProps) => {
+  const kpis = generateKPIMapping(
     applicationCount,
     interviewsCount,
     rejectionsCount,
@@ -29,6 +32,6 @@ function KPICards(props: KPICardsProps) {
       ))}
     </section>
   );
-}
+};
 
 export default KPICards;
