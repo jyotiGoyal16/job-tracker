@@ -8,7 +8,7 @@ import mailRouter from "./routes/mail";
 import applicationsRouter from "./routes/applications";
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 app.use(sessionMiddleWare);
 

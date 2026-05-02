@@ -1,0 +1,19 @@
+---
+description: Prevent AI from reading, displaying, or exposing sensitive files like .env
+alwaysApply: true
+---
+
+# Sensitive File Protection
+
+NEVER read, display, print, or include the contents of these files in any response:
+
+- `.env`
+- `.env.*` (e.g. `.env.local`, `.env.production`)
+- Any file containing secrets, API keys, tokens, or credentials
+
+## Rules
+
+- Do NOT use Read, cat, head, tail, or any tool to open `.env` files
+- Do NOT echo or log their contents in terminal commands
+- If a task requires knowing env var names, ask the user to share only the key names (not values)
+- If an `.env` file is open in the editor context, ignore its contents entirely
