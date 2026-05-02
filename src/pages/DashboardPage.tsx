@@ -3,16 +3,17 @@ import ApplicationsTable from "../components/ApplicationsTable";
 import KPICards from "../components/KPICards";
 import DashboardSidebar from "../components/DashboardSidebar";
 import useDateFilter from "../hooks/useDateFilter";
+import type { JobApplication } from "../types/jobApplication";
 
 interface DashboardPageProps {
   onLogout: () => void;
 }
 
 const DashboardPage = ({ onLogout }: DashboardPageProps) => {
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const userInfo = JSON.parse(localStorage.getItem("userInfo") ?? "{}");
   const [isLoading, setIsLoading] = useState(true);
-  const [applications, setApplications] = useState([]);
-  const [filteredApplications, setFilteredApplications] = useState([]);
+  const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<JobApplication[]>([]);
 
   const { startDate, setStartDate, endDate, setEndDate } =
     useDateFilter(syncMails);
