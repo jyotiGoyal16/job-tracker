@@ -13,12 +13,14 @@ Job Tracker is a full-stack TypeScript application that syncs job-related emails
 ## Tech Stack
 
 ### Frontend
+
 - React 19
 - TypeScript
 - Vite
 - Tailwind CSS
 
 ### Backend
+
 - Node.js + Express
 - TypeScript (`ts-node` in dev)
 - PostgreSQL (`pg`)
@@ -29,12 +31,14 @@ Job Tracker is a full-stack TypeScript application that syncs job-related emails
 
 ```text
 Job Tracker/
-├── src/                          # Frontend
-│   ├── components/               # Reusable UI components
-│   ├── hooks/                    # Custom hooks (auth, etc.)
-│   ├── pages/                    # Route-level pages
-│   ├── types/                    # Frontend types
-│   └── utils/                    # Frontend helper functions
+├── src/                          # Frontend (Vite + React)
+│   ├── assets/                   # Static files such as images
+│   ├── components/               # Feature UI (dashboard, table, filters, login); generic pieces live under shared/
+│   ├── pages/                    # Full-page views tied to routes
+│   ├── hooks/                    # Reusable client behavior shared across the UI
+│   ├── types/                    # TypeScript definitions for the frontend
+│   ├── utils/                    # Small helpers (formatting, derived values for the UI)
+│   └── data/                     # Optional mock or sample data for local development
 ├── server/                       # Backend
 │   ├── src/
 │   │   ├── configs/              # DB + Google OAuth config
@@ -90,6 +94,7 @@ VITE_API_URL=http://localhost:3001
 ## Database Notes
 
 Minimum required tables:
+
 - `users`
 - `oauth_tokens`
 - `applications`
@@ -136,25 +141,26 @@ Runs on `http://localhost:5173`
 ## Scripts
 
 ### Root (frontend)
+
 - `npm run dev` - start Vite dev server
 - `npm run build` - type-check + build
 - `npm run lint` - run ESLint
 - `npm run preview` - preview production build
 
 ### `server/` (backend)
+
 - `npm run dev` - start server with nodemon + ts-node
 - `npm run build` - compile TS
 - `npm run start` - run compiled JS
 
 ## Frontend Functionality
 
-- Protected routes (`/login`, `/dashboard`)
-- Login page with Google sign-in
-- Dashboard header with user profile + date range picker
-- Manual Sync Mails trigger
-- Table view for applications
-- KPI cards derived from application data
-- Loading spinner while sync/applications fetch is in progress
+- Protected routes for login and dashboard
+- Login with Google
+- Dashboard: sidebar (branding, profile, date range, logout) and main area (summary KPIs, filterable applications table)
+- Changing the date range triggers a mail sync for that window, then the applications list refreshes
+- Table filters for status, platform, and location
+- Loading feedback while sync and application requests run
 
 ## Backend Functionality
 
