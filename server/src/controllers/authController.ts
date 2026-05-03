@@ -78,10 +78,10 @@ const healthCheck = (req: Request, res: Response) => {
   const user = (req.session as any).user;
 
   if (!user) {
-    return res.json({ isLoggedIn: false });
+    return res.status(401).json({ isLoggedIn: false, user: null }); // ✅ consistent shape
   }
 
-  res.json({ message: "Logged In!", user });
+  res.json({ isLoggedIn: true, user });
 };
 
 const logout = (req: Request, res: Response) => {
