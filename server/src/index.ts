@@ -10,6 +10,7 @@ import applicationsRouter from "./routes/applications";
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+app.set("trust proxy", 1);
 app.use(sessionMiddleWare);
 
 app.use("/auth", authRouter);
