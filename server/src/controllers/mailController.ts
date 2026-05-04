@@ -55,7 +55,9 @@ const getMails = async (req: Request, res: Response) => {
 
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
     const startDate = req.query.startDate as string;
-    const endDate = req.query.endDate as string;
+    const endDateRaw = new Date(req.query.endDate as string);
+    endDateRaw.setDate(endDateRaw.getDate() + 1);
+    const endDate = endDateRaw.toISOString().split("T")[0] ?? "";
 
     const searchQuery = `
     (from:jobs-noreply@linkedin.com OR from:indeedapply@indeed.com OR from:no-reply@us.greenhouse-mail.io OR from:no-reply@eu.greenhouse-mail.io OR from:@myworkday.com)
@@ -119,11 +121,21 @@ const getMails = async (req: Request, res: Response) => {
         m.role,
         m.platform,
         m.location,
-        m.date,
+        m.date ? new Date(m.date) : null,
         m.status,
         m.id,
         new Date(),
       ]);
+
+    if (values.length === 0) {
+      return res.json({
+        message: "No new applications found",
+        userId,
+        totalFetched: messages.length,
+        totalReturned: 0,
+        mailDetails,
+      });
+    }
 
     await pool.query(
       format(

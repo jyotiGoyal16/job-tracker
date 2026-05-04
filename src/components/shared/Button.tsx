@@ -16,7 +16,7 @@ export interface ButtonProps {
 }
 
 const baseClass =
-  "inline-flex items-center justify-center gap-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center gap-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60";
 
 const variantClass: Record<ButtonVariant, string> = {
   outlined:
