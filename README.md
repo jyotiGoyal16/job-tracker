@@ -1,188 +1,99 @@
+<div align="center">
+
 # Job Tracker
 
-Job Tracker is a full-stack TypeScript application that syncs job-related emails from Gmail, parses application details, stores them in PostgreSQL, and shows them in a dashboard.
+<img src="job-tracker.png" alt="Job Tracker dashboard — sidebar, KPI cards, and applications table" width="92%" />
 
-## What It Does
+**Gmail → PostgreSQL → one dashboard: KPIs, filters, and a virtualized applications table.**
 
-- Google OAuth2 login and session-based authentication
-- Gmail sync for job emails (LinkedIn, Indeed, Greenhouse and Workday), with support for more platforms coming soon
-- Rule-based parsing for company, role, location, platform, and status
-- Bulk upsert into `applications` with dedupe via unique conflict keys
-- Dashboard with date-range sync, applications table, KPIs, filters, and loading states
+_Track smarter. Get hired faster._
 
-## Tech Stack
+[![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Express](https://img.shields.io/badge/Express-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
-### Frontend
+</div>
 
-- React 19
-- TypeScript
-- Vite
-- Tailwind CSS
+---
 
-### Backend
+## 2. Inspiration
 
-- Node.js + Express
-- TypeScript (`ts-node` in dev)
-- PostgreSQL (`pg`)
-- Google APIs (`googleapis`)
-- Session persistence with `express-session` + `connect-pg-simple`
+When you apply for jobs on several portals, everything piles into one Gmail inbox next to newsletters, social notifications, and other mail and alerts, so applications are easy to miss. Job Tracker shows them in one optimized dashboard — easy to track!
 
-## Project Structure
+## 3. Overview
+
+Sign in with Google OAuth; the backend uses the Gmail API in **read-only** mode. Sync does **not** scan your inbox: it only lists and fetches messages that match a **narrow job-application search query** (known job senders, date window, excluded subjects), so unrelated private mail is never requested by this code path. It parses each matching email for company, role, location, platform, and status, then stores rows in PostgreSQL. The dashboard shows those applications in a virtualized table with filters and summary counts. Built with TypeScript end to end: React on the front, Node.js + Express on the back, with login backed by a server session (the browser sends cookies on API calls so the server knows who you are).
+
+## 4. Key Engineering Highlights / Optimizations
+
+- **Virtualized table**: `@tanstack/react-virtual`, only visible rows are rendered, so long lists stay light in the DOM.
+- **Paged infinite scroll**: API uses `LIMIT` / `OFFSET`; `IntersectionObserver` at the table bottom requests the next page.
+- **Idempotent mail sync**: bulk `INSERT … ON CONFLICT (user_id, source_email_id) DO NOTHING` (`pg-format`) so retries / overlapping windows do not duplicate Gmail message IDs.
+- **Rule-based parsing**: platform from `From`; Greenhouse / Workday fields via regex catalogs; plain vs HTML body chosen with heuristics + `html-to-text` when HTML wins.
+- **Parallel Gmail fetches**: once Gmail returns matching message IDs, the server loads full messages in parallel so a sync finishes sooner than loading them one after another.
+
+## 5. Tech Stack
+
+| Layer        | Choices                                                         |
+| ------------ | --------------------------------------------------------------- |
+| Client       | React 19, TypeScript, Vite 8, Tailwind, React Router 7          |
+| Data grid UX | TanStack Virtual, native `IntersectionObserver`                 |
+| API          | Express 5, `pg`, `googleapis`, `html-to-text`, `pg-format`      |
+| DB           | PostgreSQL (`users`, `oauth_tokens`, `applications`, `session`) |
+
+## 6. Architecture Overview
 
 ```text
-Job Tracker/
-├── src/                          # Frontend (Vite + React)
-│   ├── assets/                   # Static files such as images
-│   ├── components/               # Feature UI (dashboard, table, filters, login); generic pieces live under shared/
-│   ├── pages/                    # Full-page views tied to routes
-│   ├── hooks/                    # Reusable client behavior shared across the UI
-│   ├── types/                    # TypeScript definitions for the frontend
-│   ├── utils/                    # Small helpers (formatting, derived values for the UI)
-│   └── data/                     # Optional mock or sample data for local development
-├── server/                       # Backend
-│   ├── src/
-│   │   ├── configs/              # DB + Google OAuth config
-│   │   ├── controllers/          # Route handlers
-│   │   ├── middlewares/          # Session + CORS middleware
-│   │   ├── routes/               # API route definitions
-│   │   ├── types/                # Backend types
-│   │   └── utils/                # Parsing/utility helpers
-│   └── package.json
-└── package.json
+Browser (Vite + React)
+  ├─ GET /auth/health          → is the user logged in? cache profile in localStorage
+  ├─ GET /auth/google + callback → Google OAuth; tokens saved; session cookie set
+  ├─ GET /mail/sync           → sync Gmail, fetch bodies, parse, write applications
+  └─ GET /applications        → fetch applications for given date range + page + limit
+
+server/src
+  routes/*         → URL → handler
+  controllers/*    → Gmail + SQL
+  utils/mailParser → Gmail header/body parsing
+  middlewares/session → CORS + session cookie + Postgres session store
 ```
 
-## Current Key Flows
+Changing the **date range** runs a **mail sync** for that window, then the client reloads applications. Filters (status, platform, location) run in the browser over whatever pages are already loaded—they do not issue a separate filtered query to the server.
 
-### 1) Authentication
+## 7. Challenges & Tradeoffs
 
-- `GET /auth/google` starts Google OAuth flow
-- `GET /auth/google/callback` exchanges code and saves user/tokens
-- Session is stored in PostgreSQL (survives server restarts)
-- `GET /auth/health` checks login state for frontend bootstrapping
-- `POST /auth/logout` ends session
+- **Parsing**: vendors change email HTML often; new senders need new rules. That is quick to iterate for a personal app but does not cover every email format.
+- **Filters only see loaded data**: dropdown filters apply to rows already fetched. That is simple and fast to build; it is misleading if someone expects “filter the entire account” without loading all pages.
+- **Page numbers in SQL**: `OFFSET` is easy to implement; on very large tables, deep pages get slower. Cursor-based pagination would be the next step.
+- **Gmail limits**: wide date ranges mean many API calls at once; there is no queue or automatic backoff yet.
+- **Cookie login across two origins**: the React app and API run on different ports in dev; CORS must allow credentials and `CLIENT_URL` must match. Production should use HTTPS and the same cookie settings already toggled by `NODE_ENV`.
 
-### 2) Mail Sync
+## 8. Get Started
 
-- `GET /mail/sync?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
-- Uses Gmail query to fetch relevant job emails
-- Parses content with mail parser utilities
-- Stores in `applications` using bulk insert + `ON CONFLICT DO NOTHING`
+**Prerequisites:** Node 20+, PostgreSQL, a Google Cloud OAuth client, Gmail API enabled.
 
-### 3) Applications Read
+**Environment files:** copy `server/.env.example` → `server/.env` and `.env.example` → `.env`, then fill in real values.
 
-- `GET /applications?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
-- Returns applications for logged-in user in selected date range
+**Schema notes:** the `session` table is created by `connect-pg-simple` on first run when configured. The mail sync’s `ON CONFLICT` target expects Postgres to enforce uniqueness on `(user_id, source_email_id)` on `applications` (define that constraint however you manage the database).
 
-## Environment Variables
+**Run locally** (two terminals, both from the repo root)
 
-Create `.env` in `server/`:
-
-```env
-DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<db>
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-SESSION_SECRET=your_session_secret
-CLIENT_URL=http://localhost:5173
-```
-
-Create `.env` in project root for frontend:
-
-```env
-VITE_API_URL=http://localhost:3001
-```
-
-## Database Notes
-
-Minimum required tables:
-
-- `users`
-- `oauth_tokens`
-- `applications`
-- `session` (auto-created by `connect-pg-simple` when enabled)
-
-Recommended unique constraint for dedupe:
-
-```sql
-ALTER TABLE applications
-ADD CONSTRAINT uniq_source_email UNIQUE (user_id, source_email_id);
-```
-
-## Run Locally
-
-### 1) Install dependencies
+**Frontend**
 
 ```bash
-# frontend deps (root)
 npm install
-
-# backend deps
-cd server
-npm install
-```
-
-### 2) Start backend
-
-```bash
-cd server
 npm run dev
 ```
 
-Runs on `http://localhost:3001`
+→ `http://localhost:5173`
 
-### 3) Start frontend
+**Server**
 
 ```bash
-# from project root
+cd server
+npm install
 npm run dev
 ```
 
-Runs on `http://localhost:5173`
-
-## Scripts
-
-### Root (frontend)
-
-- `npm run dev` - start Vite dev server
-- `npm run build` - type-check + build
-- `npm run lint` - run ESLint
-- `npm run preview` - preview production build
-
-### `server/` (backend)
-
-- `npm run dev` - start server with nodemon + ts-node
-- `npm run build` - compile TS
-- `npm run start` - run compiled JS
-
-## Frontend Functionality
-
-- Protected routes for login and dashboard
-- Login with Google
-- Dashboard: sidebar (branding, profile, date range, logout) and main area (summary KPIs, filterable applications table)
-- Changing the date range triggers a mail sync for that window, then the applications list refreshes
-- Table filters for status, platform, and location
-- Loading feedback while sync and application requests run
-
-## Backend Functionality
-
-- Session-based auth and health check
-- Gmail read-only scope integration
-- Job email filtering via Gmail search query
-- Email body extraction (`text/plain` and `text/html`)
-- Status detection (`applied`, `rejected`, `other`)
-- Bulk database persistence with conflict-safe dedupe
-
-## API Summary
-
-- `GET /auth/google`
-- `GET /auth/google/callback`
-- `GET /auth/health`
-- `POST /auth/logout`
-- `GET /mail/sync?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
-- `GET /applications?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
-
-## Notes
-
-- Keep frontend and backend running in separate terminals.
-- Ensure Google OAuth redirect URL matches backend callback:
-  `http://localhost:3001/auth/google/callback`
-- Use secure cookies/HTTPS and stricter CORS values in production.
+→ `http://localhost:3001`
