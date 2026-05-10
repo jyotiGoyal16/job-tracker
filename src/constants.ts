@@ -50,10 +50,13 @@ const LOCATION_OPTIONS: string[] = [
   "On-site",
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 export {
   COLUMN_LABELS,
   BADGE_CLASSES,
   STATUS_OPTIONS,
   PLATFORM_OPTIONS,
   LOCATION_OPTIONS,
+  ITEMS_PER_PAGE,
 };

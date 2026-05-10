@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ApplicationsTable from "../components/ApplicationsTable";
 import KPICards from "../components/KPICards";
 import DashboardSidebar from "../components/DashboardSidebar";
 import useDateFilter from "../hooks/useDateFilter";
 import type { JobApplication } from "../types/jobApplication";
+import { ITEMS_PER_PAGE } from "../constants";
 
 interface DashboardPageProps {
   onLogout: () => void;
@@ -11,25 +12,45 @@ interface DashboardPageProps {
 
 const DashboardPage = ({ onLogout }: DashboardPageProps) => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo") ?? "{}");
-  const [isLoading, setIsLoading] = useState(true);
+  const limit: number = ITEMS_PER_PAGE;
+  const [isLoading, setIsLoading] = useState(false);
   const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [filteredApplications, setFilteredApplications] = useState<JobApplication[]>([]);
-
+  const [hasMore, setHasMore] = useState(true);
+  const [filteredApplications, setFilteredApplications] = useState<
+    JobApplication[]
+  >([]);
+  const [page, setPage] = useState<number>(1);
   const { startDate, setStartDate, endDate, setEndDate } =
     useDateFilter(syncMails);
 
   const fetchApplications = () => {
-    const params = new URLSearchParams({ startDate, endDate });
+    if (isLoading || !hasMore) return;
+
+    setIsLoading(true);
+    const params = new URLSearchParams({
+      startDate,
+      endDate,
+      page: page.toString(),
+      limit: limit.toString(),
+    });
     fetch(`${import.meta.env.VITE_API_URL}/applications?${params.toString()}`, {
       credentials: "include",
     })
       .then((res) => res.json())
       .then((data) => {
-        const jobApplications = data.data;
+        const jobApplications = [...applications, ...data.data];
         setApplications(jobApplications);
         setFilteredApplications(jobApplications);
-      });
+        if (jobApplications.length >= data.total) {
+          setHasMore(false);
+        }
+      })
+      .finally(() => setIsLoading(false));
   };
+
+  useEffect(() => {
+    fetchApplications();
+  }, [page]);
 
   function syncMails(rangeStartDate: string, rangeEndDate: string) {
     const params = new URLSearchParams({
@@ -41,8 +62,7 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
       credentials: "include",
     })
       .then((res) => res.json())
-      .then(() => fetchApplications())
-      .finally(() => setIsLoading(false));
+      .then(() => fetchApplications());
   }
 
   const applicationCount = filteredApplications.length;
@@ -78,6 +98,9 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
           />
         </div>
         <ApplicationsTable
+          page={page}
+          setPage={setPage}
+          hasMore={hasMore}
           filteredApplications={filteredApplications}
           applications={applications}
           isLoading={isLoading}
